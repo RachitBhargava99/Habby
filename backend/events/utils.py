@@ -19,3 +19,15 @@ def get_activity_data(test_date, num_days, habit_id):
             datewise_activity_map[each_activity.timestamp.strftime('%m-%d-%y')] += 1
 
     return datewise_activity_map
+
+
+def get_change_index(cat_level, pref_level):
+    init_level = 0.99
+
+    converted_pref_level = (1 - ((1 - pref_level / 3) ** 4))
+
+    converted_cat_level = (1 - ((1 - cat_level / 7) ** 2))
+
+    change_index = init_level * converted_pref_level * converted_cat_level
+
+    return change_index

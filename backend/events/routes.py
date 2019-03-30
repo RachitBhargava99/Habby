@@ -5,7 +5,7 @@ import json
 import requests
 from datetime import datetime
 from flask_mail import Message
-from backend.events.utils import get_activity_data
+from backend.events.utils import get_activity_data, get_change_index
 
 events = Blueprint('queues', __name__)
 
@@ -35,6 +35,8 @@ def add_new_category():
         Name of the category to be added
     cat_level : int
         Level of the category you want to add
+    cat_ideal_num : int
+        Ideal number to be reached
 
     Returns
     -------
@@ -55,7 +57,8 @@ def add_new_category():
 
     cat_name = request_json['cat_name']
     cat_level = request_json['cat_level']
-    new_cat = Category(name=cat_name, level=cat_level)
+    cat_ideal_num = request_json['cat_ideal_num']
+    new_cat = Category(name=cat_name, level=cat_level, ideal_num=cat_ideal_num)
     db.session.add(new_cat)
     db.session.commit()
 
@@ -71,6 +74,7 @@ def attach_habit_to_user():
     Special Restrictions
     --------------------
     User must be logged in
+    Category must exist
 
     JSON Parameters
     ---------------
@@ -82,6 +86,9 @@ def attach_habit_to_user():
         Level indicated by user for the habit
     cat_id : int
         ID of the category to link the habit to
+    curr_num : int
+        Current number the user is at for the habit
+        For example, this field shall be 7 if a user does something SEVEN times a day
 
     Returns
     -------
@@ -100,8 +107,17 @@ def attach_habit_to_user():
     habit_name = request_json['habit_name']
     pref_level = request_json['pref_level']
     cat_id = request_json['cat_id']
+    curr_num = request_json['curr_nun']
 
-    new_habit = Habit(name=habit_name, pref_level=pref_level, user_id=user.id, cat_id=cat_id)
+    cat = Category.query.filter_by(id=cat_id).first()
+
+    if not cat:
+        return json.dumps({'status': 0, 'error': "Category Not Found"})
+
+    change_index = get_change_index(cat.level, pref_level)
+
+    new_habit = Habit(name=habit_name, pref_level=pref_level, change_index=change_index, user_id=user.id, cat_id=cat_id,
+                      curr_num=curr_num)
     db.session.add(new_habit)
     db.session.commit()
 

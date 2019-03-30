@@ -329,3 +329,66 @@ def get_habit_data():
             'curr_target': habit.curr_target
         }
     })
+
+
+@events.route('/event/cat/get_sorted', methods=['POST'])
+def get_sorted_cat():
+    """Get sorted list of all category names based on how close they are related to provided text
+
+    Method Type: POST
+
+    Special Restrictions
+    --------------------
+    User must be logged in
+
+    JSON Parameters
+    ---------------
+    auth_token : str
+        Token to authorize the request - released when logging in
+    text : str
+        Text to compare
+
+    Returns
+    -------
+    JSON
+        status : int
+            Tells whether or not did the function work - 1 for success, 0 for failure
+        data : list of tuples
+            Index 0: Match index of category
+            Index 1: Category name
+    """
+    request_json = request.get_json()
+
+    auth_token = request_json['auth_token']
+    user = User.verify_auth_token(auth_token)
+
+    if user is None:
+        return json.dumps({'status': 0, 'error': "User Not Authenticated"})
+
+    text_to_compare = request_json['text']
+
+    all_cat = Category.query.all()
+    cat_names = [x.name for x in all_cat]
+
+    marked_cat = []
+
+    for cat in cat_names:
+        request_data = requests.post('http://api.cortical.io/rest/compare?retina_name=en_associative', json={
+            [
+                {
+                    'text': cat
+                },
+                {
+                    'text': text_to_compare
+                }
+            ]
+        })
+        data = request_data.json()
+        marked_cat.append((data['weightedScoring'], cat))
+
+    marked_cat.sort(reverse=True)
+
+    return json.dumps({
+        'status': 1,
+        'data': marked_cat
+    })

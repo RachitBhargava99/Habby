@@ -45,6 +45,9 @@ class User(db.Model, UserMixin):
 class Habit(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(127), nullable=False)
+    pref_level = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    cat_id = db.Column(db.Integer, db.ForeignKey('cat.id'), nullable=False)
 
 
 class Category(db.Model):

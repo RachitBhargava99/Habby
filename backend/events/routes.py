@@ -21,7 +21,9 @@ def add_new_category():
 
     Method Type: POST
 
-    Special Restriction: User must be admin
+    Special Restrictions
+    --------------------
+    User must be admin
 
     JSON Parameters
     ---------------
@@ -64,7 +66,9 @@ def attach_habit_to_user():
 
     Method Type: POST
 
-    Special Restriction: N/A
+    Special Restrictions
+    --------------------
+    N/A
 
     JSON Parameters
     ---------------
@@ -104,11 +108,14 @@ def attach_habit_to_user():
 
 @events.route('/event/activity/report', methods=['POST'])
 def report_activity():
-    """Attaches a new habit to a user and makes an instance of it in database
+    """Adds new activity to a habit
 
     Method Type: POST
 
-    Special Restriction: N/A
+    Special Restrictions
+    --------------------
+    Habit must exist
+    Habit must belong to user logged in
 
     JSON Parameters
     ---------------

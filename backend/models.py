@@ -54,3 +54,9 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(63), nullable=False)
     level = db.Column(db.Integer, nullable=False)
+
+
+class Activity(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    habit_id = db.Column(db.Integer, db.ForeignKey('habit.id'), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.now(), nullable=False)

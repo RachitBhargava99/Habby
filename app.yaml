@@ -11,4 +11,4 @@ env_variables:
   CLOUDSQL_USER: 'root'
   CLOUDSQL_PASSWORD: ''
   CLOUDSQL_DATABASE: 'habby_sql'
-  CLOUDSQL_CONNECTION_NAME: 'thinger:us-east1:eventster'
+  CLOUDSQL_CONNECTION_NAME: 'thinger:us-east1:habby'

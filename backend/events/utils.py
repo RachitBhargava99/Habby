@@ -3,6 +3,7 @@ from backend.models import Activity, Habit
 from sqlalchemy import and_
 import random
 import math
+from backend import db
 
 
 def get_activity_data(test_date, num_days, habit_id):

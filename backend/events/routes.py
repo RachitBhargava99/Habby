@@ -5,7 +5,7 @@ import json
 import requests
 from datetime import datetime
 from flask_mail import Message
-from backend.events.utils import get_activity_data, get_change_index
+from backend.events.utils import get_activity_data, get_change_index, set_target
 
 events = Blueprint('queues', __name__)
 
@@ -239,3 +239,39 @@ def get_activity_data():
         return json.dumps({'status': 0, 'error': "Invalid Mode Provided"})
 
     return json.dumps({'status': 1, 'datewise_activity_map': datewise_activity_map})
+
+
+@events.route('/event/activity/get_data', methods=['GET'])
+def update_habit_data():
+    """Update habit data based on the activities logged in on the previous day
+
+    Method Type: GET
+
+    Special Restrictions
+    --------------------
+    N/A
+
+    Returns
+    -------
+    JSON
+        status : int
+            Tells whether or not did the function work - 1 for success, 0 for failure
+    """
+    curr_time = datetime.now()
+    date_string = curr_time.strftime("%m-%d-%y")
+    curr_date = datetime.strptime(date_string, "%m-%d-%y")
+
+    all_habits = Habit.query.all()
+
+    for each_habit in all_habits:
+        single_activity_map = get_activity_data(curr_date, 1, each_habit.id)
+        num_times = single_activity_map.get(date_string, default=0)
+        diff = each_habit.target_num - num_times
+        if diff >= 0:
+            each_habit.curr_num *= each_habit.change_index ** (diff + 1)
+        else:
+            each_habit.curr_num /= each_habit.change_index ** (diff * (-1))
+        db.session.commit()
+        set_target(each_habit.id)
+
+    return json.dumps({'status': 1})

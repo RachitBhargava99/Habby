@@ -1,6 +1,8 @@
 from datetime import timedelta
-from backend.models import Activity
+from backend.models import Activity, Habit
 from sqlalchemy import and_
+import random
+import math
 
 
 def get_activity_data(test_date, num_days, habit_id):
@@ -31,3 +33,11 @@ def get_change_index(cat_level, pref_level):
     change_index = init_level * converted_pref_level * converted_cat_level
 
     return change_index
+
+
+def set_target(habit_id):
+    habit = Habit.query.filter_by(id=habit_id)
+    curr_num = habit.curr_num
+    new_target = math.floor(curr_num + random.random())
+    habit.curr_target = new_target
+    db.session.commit()

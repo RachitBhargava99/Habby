@@ -48,6 +48,7 @@ class Habit(db.Model):
     curr_num = db.Column(db.Float, nullable=False)
     pref_level = db.Column(db.Integer, nullable=False)
     change_index = db.Column(db.Float, nullable=False)
+    curr_target = db.Column(db.Integer, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     cat_id = db.Column(db.Integer, db.ForeignKey('cat.id'), nullable=False)
 

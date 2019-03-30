@@ -213,8 +213,6 @@ def get_activity_data():
 
     test_date = datetime.strptime(request_json['test_date'], '%m-%d-%y')
 
-    datewise_activity_map = {}
-
     if mode == 'W':
         datewise_activity_map = get_activity_data(test_date, 7, habit_id)
     elif mode == 'M':

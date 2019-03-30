@@ -1,0 +1,14 @@
+service: eventster
+runtime: python37
+entrypoint: gunicorn -t 120 -b :$PORT run:app
+
+instance_class: F1
+
+env_variables:
+  PROJECT_ID: 'eventster'
+  DATA_BACKEND: 'cloudsql'
+  CLOUDSQL_USER: 'root'
+  CLOUDSQL_PASSWORD: ''
+  CLOUDSQL_DATABASE: 'eventster_sql'
+  CLOUDSQL_CONNECTION_NAME: 'thinger:us-east1:eventster'
+  EVENTBRITE_OAUTH_TOKEN: B2X7BI4J7PTTSBYJG7SO

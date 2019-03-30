@@ -10,10 +10,10 @@ class Config:
     MAIL_USE_SSL = True
     PROJECT_ID = os.environ.get('PROJECT_ID')
     DATA_BACKEND = os.environ.get('DATA_BACKEND')
-#    CLOUDSQL_USER = os.environ.get('CLOUDSQL_USER')
-#    CLOUDSQL_PASSWORD = os.environ.get('CLOUDSQL_PASSWORD')
-#    CLOUDSQL_DATABASE = os.environ.get('CLOUDSQL_DATABASE')
-#    CLOUDSQL_CONNECTION_NAME = os.environ.get('CLOUDSQL_CONNECTION_NAME')
+    CLOUDSQL_USER = os.environ.get('CLOUDSQL_USER')
+    CLOUDSQL_PASSWORD = os.environ.get('CLOUDSQL_PASSWORD')
+    CLOUDSQL_DATABASE = os.environ.get('CLOUDSQL_DATABASE')
+    CLOUDSQL_CONNECTION_NAME = os.environ.get('CLOUDSQL_CONNECTION_NAME')
 #    SQLALCHEMY_DATABASE_URI = (
 #        'mysql+pymysql://{user}:{password}@localhost/{database}?unix_socket=/cloudsql/{connection_name}').format(
 #        user=CLOUDSQL_USER, password=CLOUDSQL_PASSWORD, database=CLOUDSQL_DATABASE,

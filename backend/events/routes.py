@@ -117,7 +117,7 @@ def attach_habit_to_user():
     change_index = get_change_index(cat.level, pref_level)
 
     new_habit = Habit(name=habit_name, pref_level=pref_level, change_index=change_index, user_id=user.id, cat_id=cat_id,
-                      curr_num=curr_num)
+                      curr_num=curr_num, init_num=curr_num)
     db.session.add(new_habit)
     db.session.commit()
 
@@ -266,7 +266,7 @@ def update_habit_data():
     for each_habit in all_habits:
         single_activity_map = get_activity_data(curr_date, 1, each_habit.id)
         num_times = single_activity_map.get(date_string, default=0)
-        diff = each_habit.target_num - num_times
+        diff = each_habit.curr_target - num_times
         if diff >= 0:
             each_habit.curr_num *= each_habit.change_index ** (diff + 1)
         else:
@@ -275,3 +275,57 @@ def update_habit_data():
         set_target(each_habit.id)
 
     return json.dumps({'status': 1})
+
+
+@events.route('/event/habit/get_data', methods=['POST'])
+def get_habit_data():
+    """Get basic data of a habit
+
+    Method Type: POST
+
+    Special Restrictions
+    --------------------
+    User must be logged in
+    Habit must exist
+    Habit must belong to user logged in
+
+    JSON Parameters
+    ---------------
+    auth_token : str
+        Token to authorize the request - released when logging in
+    habit_id : int
+        ID of the habit reporting activity to
+
+    Returns
+    -------
+    JSON
+        status : int
+            Tells whether or not did the function work - 1 for success, 0 for failure
+        data : dict(str -> str, str -> int, str -> int)
+            Map containing the basic data related to the requested habit
+    """
+    request_json = request.get_json()
+
+    auth_token = request_json['auth_token']
+    user = User.verify_auth_token(auth_token)
+
+    if user is None:
+        return json.dumps({'status': 0, 'error': "User Not Authenticated"})
+
+    habit_id = request_json['habit_id']
+    habit = Habit.query.filter_by(id=habit_id).first()
+
+    if not habit:
+        return json.dumps({'status': 0, 'error': "Habit Not Found"})
+
+    if user.id != habit.user_id:
+        return json.dumps({'status': 0, 'error': "The selected habit does not belong to the logged in user."})
+
+    return json.dumps({
+        'status': 1,
+        'data': {
+            'name': habit.name,
+            'level_index': ((habit.init_num - habit.curr_num) / habit.init_num),
+            'curr_target': habit.curr_target
+        }
+    })

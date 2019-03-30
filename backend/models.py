@@ -46,6 +46,7 @@ class Habit(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(127), nullable=False)
     curr_num = db.Column(db.Float, nullable=False)
+    init_num = db.Column(db.Float, nullable=False)
     pref_level = db.Column(db.Integer, nullable=False)
     change_index = db.Column(db.Float, nullable=False)
     curr_target = db.Column(db.Integer, nullable=True)

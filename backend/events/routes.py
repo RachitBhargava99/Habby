@@ -5,6 +5,7 @@ import json
 import requests
 from datetime import datetime
 from flask_mail import Message
+from backend.events.utils import get_activity_data
 
 events = Blueprint('queues', __name__)
 
@@ -154,3 +155,73 @@ def report_activity():
     db.session.commit()
 
     return json.dumps({'status': 1})
+
+
+@events.route('/event/activity/get_data', methods=['POST'])
+def get_activity_data():
+    """Get all logged activity data of a habit
+
+    Method Type: POST
+
+    Special Restrictions
+    --------------------
+    User must be logged in
+    Habit must exist
+    Habit must belong to user logged in
+    Mode must either be W, M, or Y
+
+    JSON Parameters
+    ---------------
+    auth_token : str
+        Token to authorize the request - released when logging in
+    habit_id : int
+        ID of the habit reporting activity to
+    mode : str
+        Mode of search to perform - weekly, monthly, yearly
+    test_date : str
+        Date from which the search must start
+        Must be in MM-DD-YY format
+
+    Returns
+    -------
+    JSON
+        status : int
+            Tells whether or not did the function work - 1 for success, 0 for failure
+        datewise_activity_map : dict(str -> int)
+            Map of dates to number of occurrences of activity
+                Dates (key) formatted in MM-DD-YY format
+                Numbers (value) specify the number of occurrences of activity
+    """
+    request_json = request.get_json()
+
+    auth_token = request_json['auth_token']
+    user = User.verify_auth_token(auth_token)
+
+    if user is None:
+        return json.dumps({'status': 0, 'error': "User Not Authenticated"})
+
+    habit_id = request_json['habit_id']
+    habit = Habit.query.filter_by(id=habit_id).first()
+
+    if not habit:
+        return json.dumps({'status': 0, 'error': "Habit Not Found"})
+
+    if user.id != habit.user_id:
+        return json.dumps({'status': 0, 'error': "The selected habit does not belong to the logged in user."})
+
+    mode = request_json['mode']
+
+    test_date = datetime.strptime(request_json['test_date'], '%m-%d-%y')
+
+    datewise_activity_map = {}
+
+    if mode == 'W':
+        datewise_activity_map = get_activity_data(test_date, 7, habit_id)
+    elif mode == 'M':
+        datewise_activity_map = get_activity_data(test_date, 30, habit_id)
+    elif mode == 'Y':
+        datewise_activity_map = get_activity_data(test_date, 365, habit_id)
+    else:
+        return json.dumps({'status': 0, 'error': "Invalid Mode Provided"})
+
+    return json.dumps({'status': 1, 'datewise_activity_map': datewise_activity_map})

@@ -23,6 +23,7 @@ def add_new_category():
 
     Special Restrictions
     --------------------
+    User must be logged in
     User must be admin
 
     JSON Parameters
@@ -68,7 +69,7 @@ def attach_habit_to_user():
 
     Special Restrictions
     --------------------
-    N/A
+    User must be logged in
 
     JSON Parameters
     ---------------
@@ -114,6 +115,7 @@ def report_activity():
 
     Special Restrictions
     --------------------
+    User must be logged in
     Habit must exist
     Habit must belong to user logged in
 

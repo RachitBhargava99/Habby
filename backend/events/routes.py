@@ -5,7 +5,7 @@ import json
 import requests
 from datetime import datetime
 from flask_mail import Message
-from backend.events.utils import get_activity_data, get_change_index, set_target
+from backend.events.utils import get_habit_activity_data, get_change_index, set_target
 
 events = Blueprint('queues', __name__)
 
@@ -107,7 +107,7 @@ def attach_habit_to_user():
     habit_name = request_json['habit_name']
     pref_level = request_json['pref_level']
     cat_id = request_json['cat_id']
-    curr_num = request_json['curr_nun']
+    curr_num = request_json['curr_num']
 
     cat = Category.query.filter_by(id=cat_id).first()
 
@@ -120,6 +120,8 @@ def attach_habit_to_user():
                       curr_num=curr_num, init_num=curr_num)
     db.session.add(new_habit)
     db.session.commit()
+
+    set_target(new_habit.id)
 
     return json.dumps({'status': 1})
 
@@ -230,11 +232,11 @@ def get_activity_data():
     test_date = datetime.strptime(request_json['test_date'], '%m-%d-%y')
 
     if mode == 'W':
-        datewise_activity_map = get_activity_data(test_date, 7, habit_id)
+        datewise_activity_map = get_habit_activity_data(test_date, 7, habit_id)
     elif mode == 'M':
-        datewise_activity_map = get_activity_data(test_date, 30, habit_id)
+        datewise_activity_map = get_habit_activity_data(test_date, 30, habit_id)
     elif mode == 'Y':
-        datewise_activity_map = get_activity_data(test_date, 365, habit_id)
+        datewise_activity_map = get_habit_activity_data(test_date, 365, habit_id)
     else:
         return json.dumps({'status': 0, 'error': "Invalid Mode Provided"})
 
@@ -264,7 +266,7 @@ def update_habit_data():
     all_habits = Habit.query.all()
 
     for each_habit in all_habits:
-        single_activity_map = get_activity_data(curr_date, 1, each_habit.id)
+        single_activity_map = get_habit_activity_data(curr_date, 1, each_habit.id)
         num_times = single_activity_map.get(date_string, default=0)
         diff = each_habit.curr_target - num_times
         if diff >= 0:
@@ -368,23 +370,26 @@ def get_sorted_cat():
     text_to_compare = request_json['text']
 
     all_cat = Category.query.all()
-    cat_names = [x.name for x in all_cat]
+    effective_cat = [(x.name, x.id) for x in all_cat]
 
     marked_cat = []
 
-    for cat in cat_names:
-        request_data = requests.post('http://api.cortical.io/rest/compare?retina_name=en_associative', json={
-            [
-                {
-                    'text': cat
-                },
-                {
-                    'text': text_to_compare
-                }
-            ]
-        })
+    for cat in effective_cat:
+        request_data = requests.post('http://api.cortical.io/rest/compare?retina_name=en_associative', json=
+        [
+            {
+                'text': cat[0]
+            },
+            {
+                'text': text_to_compare
+            }
+        ]
+                                     )
         data = request_data.json()
-        marked_cat.append((data['weightedScoring'], cat))
+        try:
+            marked_cat.append((data['weightedScoring'], cat[0], cat[1]))
+        except Exception:
+            marked_cat.append((0, cat[0], cat[1]))
 
     marked_cat.sort(reverse=True)
 
@@ -392,3 +397,53 @@ def get_sorted_cat():
         'status': 1,
         'data': marked_cat
     })
+
+
+@events.route('/event/habit/get_all', methods=['POST'])
+def get_all_user_habits():
+    """Get data of all habits registered by the logged in user
+
+    Method Type: POST
+
+    Special Restrictions
+    --------------------
+    User must be logged in
+
+    JSON Parameters
+    ---------------
+    auth_token : str
+        Token to authorize the request - released when logging in
+
+    Returns
+    -------
+    JSON
+        status : int
+            Tells whether or not did the function work - 1 for success, 0 for failure
+        data : list of dicts specifying data of each habit of the user
+    """
+    request_json = request.get_json()
+
+    auth_token = request_json['auth_token']
+    user = User.verify_auth_token(auth_token)
+
+    if user is None:
+        return json.dumps({'status': 0, 'error': "User Not Authenticated"})
+
+    all_habits = Habit.query.filter_by(user_id=user.id)
+
+    habit_list = []
+
+    for habit in all_habits:
+        habit_list.append({
+            'id': habit.id,
+            'name': habit.name,
+            'curr_num': habit.curr_num,
+            'init_num': habit.init_num,
+            'pref_level': habit.pref_level,
+            'curr_target': habit.curr_target,
+            'num_today': get_habit_activity_data(datetime.strptime(datetime.now().strftime("%m-%d-%y"), "%m-%d-%y"), 7,
+                                                 habit.id),
+            'cat_id': habit.cat_id
+        })
+
+    return json.dumps({'status': 1, 'data': habit_list})

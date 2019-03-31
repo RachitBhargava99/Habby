@@ -6,7 +6,7 @@ instance_class: F1
 
 env_variables:
   SQLALCHEMY_DATABASE_URI: sqlite:///site.db
-  PROJECT_ID: 'habby'
+  PROJECT_ID: 'thinger'
   DATA_BACKEND: 'cloudsql'
   CLOUDSQL_USER: 'root'
   CLOUDSQL_PASSWORD: ''

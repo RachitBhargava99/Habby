@@ -8,9 +8,11 @@ from datetime import datetime
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(127), nullable=False)
-    email = db.Column(db.String(63), unique=True, nullable=False)
+    email = db.Column(db.String(63), unique=False, nullable=False)
     password = db.Column(db.String(63), unique=False, nullable=False)
     isAdmin = db.Column(db.Boolean, nullable=False, default=False)
+    isSnap = db.Column(db.Boolean, nullable=False, default=False)
+    snapPic = db.Column(db.String(255), nullable=True)
 
     def get_auth_token(self, expires_seconds=86400):
         s = Serializer(current_app.config['SECRET_KEY'], expires_seconds)

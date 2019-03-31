@@ -6,12 +6,12 @@ import math
 from backend import db
 
 
-def get_activity_data(test_date, num_days, habit_id):
-    num_days_later = test_date + timedelta(days=num_days)
+def get_habit_activity_data(test_date, num_days, habit_id):
+    num_days_ago = test_date - timedelta(days=num_days)
 
     all_activities = Activity.query.filter(and_(Activity.habit_id == habit_id,
-                                                and_(Activity.timestamp >= test_date,
-                                                     Activity.timestamp < num_days_later)))
+                                                and_(Activity.timestamp <= test_date,
+                                                     Activity.timestamp >= num_days_ago)))
 
     datewise_activity_map = {}
 
@@ -37,7 +37,7 @@ def get_change_index(cat_level, pref_level):
 
 
 def set_target(habit_id):
-    habit = Habit.query.filter_by(id=habit_id)
+    habit = Habit.query.filter_by(id=habit_id).first()
     curr_num = habit.curr_num
     new_target = math.floor(curr_num + random.random())
     habit.curr_target = new_target

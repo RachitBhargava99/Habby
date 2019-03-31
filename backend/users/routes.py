@@ -11,6 +11,22 @@ users = Blueprint('users', __name__)
 @users.route('/login', methods=['GET', 'POST'])
 def login():
     request_json = request.get_json()
+    if request_json['isSnap']:
+        display_name = request_json['display_name']
+        snap_pic = request_json['snap_pic']
+        user = User.query.filter_by(name=display_name, snapPic=snap_pic).first()
+        if user:
+            final_dict = {
+                'id': user.id,
+                'auth_token': user.get_auth_token(),
+                'name': user.name,
+                'email': user.email,
+                'isAdmin': user.isAdmin,
+                'status': 1
+            }
+            return json.dumps(final_dict)
+        else:
+            return json.dumps({'status': 0, 'error': "You need to register before you can log in."})
     email = request_json['email']
     password = request_json['password']
     user = User.query.filter_by(email=email).first()
@@ -36,6 +52,12 @@ def login():
 @users.route('/register', methods=['GET', 'POST'])
 def normal_register():
     request_json = request.get_json()
+    if request_json['isSnap']:
+        user = User(email="snapchat@snapchat.com", password="password", name=request_json['name'], isSnap=True,
+                    snapPic=request_json['snapPic'], isAdmin=False)
+        db.session.add(user)
+        db.session.commit()
+        return json.dumps({'id': user.id, 'status': 1})
     if User.query.filter_by(email=request_json['email']).first():
         return json.dumps({'status': 0, 'output': User.query.filter_by(email=request_json['email']).first().email,
                           'error': "User Already Exists"})
